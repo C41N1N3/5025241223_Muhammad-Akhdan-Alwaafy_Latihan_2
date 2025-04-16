@@ -49,7 +49,7 @@ int main() {
     }
     close(file);
     FILE *src = fopen("hai.txt", "r");
-    FILE *dst = fopen("hai.txt", "w");
+    FILE *dst = fopen("halo/hai.txt", "w");
     if (src == NULL || dst == NULL) {
         perror("error copy");
         return 1;
@@ -65,7 +65,7 @@ int main() {
 }
 ```
 
-###Tutorial
+### Tutorial
 
 Berikut adalah penjelasan **baris per baris** dari program C yang kamu lampirkan. Program ini berkaitan dengan **manajemen file dan direktori** di sistem operasi berbasis UNIX/Linux:
 
@@ -136,7 +136,7 @@ close(file);
 
 ```c
 FILE *src = fopen("hai.txt", "r");
-FILE *dst = fopen("hai.txt", "w");
+FILE *dst = fopen("halo/hai.txt", "w");
 if (src == NULL || dst == NULL) {
     perror("error copy");
     return 1;
