@@ -810,6 +810,109 @@ int main() {
 }
 ```
 
+### Tutorial
+
+### 1. Header & Struct
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+struct message {
+    long msg_type;
+    char msg_text[100];
+};
+```
+
+- Menggunakan:
+  - `msgget` → membuat/mengakses antrian pesan
+  - `msgsnd` → mengirim pesan
+  - `msgrcv` → menerima pesan
+  - `msgctl` → kontrol dan hapus antrian
+- Struktur `message`:
+  - `msg_type` → tipe pesan (wajib bertipe `long`)
+  - `msg_text` → isi pesan, di sini maksimal 100 karakter.
+
+---
+
+### 2. Membuat Message Queue
+
+```c
+key_t key = 1234;
+int msgid = msgget(key, IPC_CREAT | 0666);
+```
+
+- `key = 1234` → kunci unik untuk mengidentifikasi queue.
+- `msgget(..., IPC_CREAT | 0666)` → buat message queue jika belum ada.
+  - `0666` → izin read/write untuk user, group, dan others.
+- `msgid` → ID unik untuk antrian pesan.
+
+---
+
+### 3. Mengirim Pesan
+
+```c
+struct message msg;
+msg.msg_type = 1;
+strcpy(msg.msg_text, "yah belajar ipc mulu");
+msgsnd(msgid, &msg, sizeof(msg.msg_text), 0);
+```
+
+- `msg_type = 1` → tipe pesan yang bisa difilter saat menerima.
+- `msgsnd()` mengirim isi `msg_text` sebanyak `sizeof(msg.msg_text)` byte.
+- Argumen terakhir `0` → mode blocking (tunggu jika queue penuh).
+
+**Output**:
+```c
+printf("sent: %s\n", msg.msg_text);
+```
+Contoh:
+```
+sent: yah belajar ipc mulu
+```
+
+---
+
+### 4. Menerima Pesan
+
+```c
+msgrcv(msgid, &msg, sizeof(msg.msg_text), 1, 0);
+```
+
+- `msgrcv()` akan **menunggu** pesan bertipe `1`.
+- Argumen:
+  - `msgid` → ID queue
+  - `&msg` → tempat menyimpan pesan
+  - `sizeof(msg.msg_text)` → ukuran isi pesan
+  - `1` → tipe pesan yang diinginkan
+  - `0` → mode default (blocking sampai pesan tersedia)
+
+**Output**:
+```c
+printf("received: %s\n", msg.msg_text);
+```
+
+Contoh:
+```
+received: yah belajar ipc mulu
+```
+
+---
+
+### 5. Menghapus Message Queue
+
+```c
+msgctl(msgid, IPC_RMID, NULL);
+```
+
+- `msgctl(..., IPC_RMID, NULL)` → menghapus queue dari sistem.
+- **Wajib dilakukan** agar antrian tidak menumpuk di sistem setelah program selesai.
+
+---
+
 #### Output
 ```
 Pesan dikirim: yah belajar ipc mulu
