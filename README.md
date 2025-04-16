@@ -690,8 +690,80 @@ int main() {
     shmctl(shmid, IPC_RMID, NULL);
     return 0;
 }
+```
+
+### Tutorial
+
+### 1. Header
+
+```c
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+```
+
+- `stdio.h` → untuk fungsi I/O (misalnya `printf`).
+- `sys/ipc.h` dan `sys/shm.h` → untuk fungsi-fungsi Inter-Process Communication (IPC) dan shared memory.
+
+---
+
+### 2. Ambil ID Shared Memory
+
+```c
+key_t key = 1234;
+int shmid = shmget(key, 1024, 0666);
+```
+
+- Menggunakan **key yang sama** (`1234`) seperti program penulis sebelumnya.
+- `shmget()` dengan mode `0666` untuk mengakses shared memory yang sudah dibuat, **tanpa `IPC_CREAT`**.
+  - Kalau shared memory belum dibuat, maka `shmget` akan gagal (return `< 0`).
+
+---
+
+### 3. Attach ke Shared Memory
+
+```c
+char *data = (char *)shmat(shmid, NULL, 0);
+```
+
+- Menyambungkan (attach) shared memory ke ruang alamat proses ini.
+- Mengembalikan pointer ke awal segmen, yaitu tempat isi string disimpan.
+
+Kalau gagal, `shmat()` akan mengembalikan `(char *)(-1)`.
+
+---
+
+### 4. Cetak Isi Shared Memory
+
+```c
+printf("%s\n", data);
+```
+
+- Menampilkan isi shared memory ke terminal.
+- Asumsinya: data yang disimpan adalah **string C** (null-terminated string).
+- Dalam konteks ini, hasilnya adalah:
 
 ```
+aku lagi belajar ipc
+```
+
+(dengan catatan: program penulis sudah dijalankan lebih dulu)
+
+---
+
+### 5. Melepas & Menghapus Shared Memory
+
+```c
+shmdt(data);
+shmctl(shmid, IPC_RMID, NULL);
+```
+
+- `shmdt(data)` → detach shared memory dari proses ini.
+- `shmctl(..., IPC_RMID, NULL)` → menghapus **segmen shared memory dari sistem**.
+
+> Setelah perintah ini, **shared memory akan hilang**, dan tidak bisa diakses lagi oleh proses lain.
+
+---
 
 #### Output
 ```
