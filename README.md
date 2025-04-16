@@ -256,7 +256,7 @@ void* thread3_func(void* arg) {
 int main() {
     pthread_t t1, t2, t3;
     pthread_mutex_init(&log_mutex, NULL);
-    FILE *log_clear = fopen("log.txt", "w")
+    FILE *log_clear = fopen("log.txt", "w");
     if (log_clear != NULL) fclose(log_clear);
     pthread_create(&t1, NULL, thread1_func, NULL);
     pthread_create(&t2, NULL, thread2_func, NULL);
@@ -270,10 +270,6 @@ int main() {
 ```
 
 ### Tutorial
-
-Kode yang kamu berikan adalah contoh **program multithreading dalam C dengan logging menggunakan `mutex`**. Program ini membuat **tiga thread berbeda** yang menjalankan tugas masing-masing dan mencatat aktivitasnya ke dalam file log (`log.txt`).
-
-Berikut penjelasan rinci bagian per bagian:
 
 ---
 
@@ -396,24 +392,6 @@ int main() {
 - `pthread_join` memastikan `main()` menunggu semua thread selesai.
 - `log.txt` dikosongkan di awal (agar tidak terus menumpuk dari eksekusi sebelumnya).
 - Mutex dihancurkan setelah semua selesai.
-
----
-
-## ⚠️ *Bug kecil*
-
-Di baris ini:
-
-```c
-FILE *log_clear = fopen("log.txt", "w")
-```
-
-Kamu lupa titik koma `;`. Seharusnya:
-
-```c
-FILE *log_clear = fopen("log.txt", "w");
-```
-
-Kalau tidak, program akan gagal dikompilasi.
 
 ---
 
