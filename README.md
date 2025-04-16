@@ -67,8 +67,6 @@ int main() {
 
 ### Tutorial
 
-Berikut adalah penjelasan **baris per baris** dari program C yang kamu lampirkan. Program ini berkaitan dengan **manajemen file dan direktori** di sistem operasi berbasis UNIX/Linux:
-
 ---
 
 ### Header
