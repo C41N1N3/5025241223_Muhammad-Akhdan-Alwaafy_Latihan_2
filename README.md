@@ -65,6 +65,114 @@ int main() {
 }
 ```
 
+###Tutorial
+
+Berikut adalah penjelasan **baris per baris** dari program C yang kamu lampirkan. Program ini berkaitan dengan **manajemen file dan direktori** di sistem operasi berbasis UNIX/Linux:
+
+---
+
+### Header
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
+```
+
+Header-header ini digunakan untuk berbagai fungsi:
+- `stdio.h` → untuk fungsi input/output standar (`printf`, `fopen`, dll.)
+- `stdlib.h` → fungsi umum seperti `exit()`, alokasi memori, dll.
+- `sys/stat.h`, `sys/types.h` → untuk fungsi `mkdir()` dan pengaturan mode akses file.
+- `unistd.h` → untuk fungsi `close()`, `write()`, dll.
+- `fcntl.h` → untuk `open()` dan flags seperti `O_CREAT`, `O_WRONLY`.
+- `string.h` → untuk manipulasi string, walaupun di sini tidak digunakan.
+
+---
+
+### Membuat folder bernama `halo`
+
+```c
+int stats;
+stats = mkdir("halo", 0777);
+if (stats == -1) {
+    perror("folder creation failed");
+    return 1;
+} else {
+    printf("folder halo is done\n");
+}
+```
+
+- `mkdir("halo", 0777)` membuat folder bernama `halo` dengan permission full akses (baca, tulis, eksekusi untuk semua user).
+- Jika gagal, program akan menampilkan error menggunakan `perror`.
+- Jika berhasil, akan mencetak `folder halo is done`.
+
+---
+
+### Membuat file `hai.txt`
+
+```c
+char filepath[100] = "hai.txt";
+int file = open(filepath, O_CREAT | O_WRONLY, 0644);
+if (file == -1) {
+    perror("hai.txt creation failed");
+    return 1;
+} else {
+    printf("hai.txt done\n");
+}
+close(file);
+```
+
+- Membuat file baru bernama `hai.txt` dengan mode tulis (`O_WRONLY`) dan jika file belum ada akan dibuat (`O_CREAT`).
+- Permission file adalah `0644` (owner: read-write, group: read, others: read).
+- Jika berhasil akan menampilkan `hai.txt done`, lalu file ditutup.
+
+---
+
+### Membuka file `hai.txt` dua kali
+
+```c
+FILE *src = fopen("hai.txt", "r");
+FILE *dst = fopen("hai.txt", "w");
+if (src == NULL || dst == NULL) {
+    perror("error copy");
+    return 1;
+}
+```
+
+- `src` dibuka dengan mode baca (`r`)
+- `dst` dibuka dengan mode tulis (`w`) → **Hati-hati!** mode `w` langsung mengosongkan file!
+- Karena `hai.txt` belum diisi data apa pun sebelumnya, file akan kosong sebelum proses penyalinan dimulai → **penyalinan akan gagal karena tidak ada yang bisa dibaca**.
+
+---
+
+### Penyalinan isi file (yang sebenarnya kosong)
+
+```c
+char ch;
+while ((ch = fgetc(src)) != EOF) {
+    fputc(ch, dst);
+}
+```
+
+- Melakukan pembacaan per karakter dari `src` dan menulis ke `dst`.
+- Tapi karena `dst` dibuka lebih dulu dalam mode `w`, isinya sudah kosong → proses ini tidak melakukan apa-apa.
+
+---
+
+### Menutup file dan mencetak `success`
+
+```c
+fclose(src);
+fclose(dst);
+printf("success");
+```
+
+---
+
 ### Output
 Struktur direktori setelah program dijalankan:
 
@@ -77,7 +185,7 @@ Struktur direktori setelah program dijalankan:
 ```
 
 ### Screenshot
-https://drive.google.com/file/d/1m1PNc5oI1ZQ5HqEAIkskzpE8Hy-iArDz/view?usp=drive_link
+https://drive.google.com/file/d/1DvA_8bM1XrR5c77XHcabIbX4UTi07h9N/view?usp=drive_link
 
 ---
 
