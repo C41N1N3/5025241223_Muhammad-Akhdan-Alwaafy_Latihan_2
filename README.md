@@ -269,12 +269,172 @@ int main() {
 }
 ```
 
-### Contoh Isi `log.txt`
+### Tutorial
+
+Kode yang kamu berikan adalah contoh **program multithreading dalam C dengan logging menggunakan `mutex`**. Program ini membuat **tiga thread berbeda** yang menjalankan tugas masing-masing dan mencatat aktivitasnya ke dalam file log (`log.txt`).
+
+Berikut penjelasan rinci bagian per bagian:
+
+---
+
+## 🔧 Header & Variabel Global
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+pthread_mutex_t log_mutex;
+int log_counter = 0;
 ```
-1. Thread 2
-2. Thread 1
-3. Thread 3
+
+- `pthread.h`: untuk pemrograman multithread (POSIX thread).
+- `pthread_mutex_t log_mutex`: mutex digunakan agar akses ke log tidak tumpang tindih antar-thread.
+- `log_counter`: penghitung jumlah log yang ditulis ke `log.txt`.
+
+---
+
+## 📄 Fungsi `log_thread`
+
+```c
+void log_thread(const char* thread_name) {
+    pthread_mutex_lock(&log_mutex);
+    log_counter++;
+    FILE *log_file = fopen("log.txt", "a");
+    if (log_file != NULL) {
+        fprintf(log_file, "%d. %s\n", log_counter, thread_name);
+        fclose(log_file);
+    }
+    pthread_mutex_unlock(&log_mutex);
+}
 ```
+
+- Fungsi ini digunakan semua thread untuk mencatat dirinya ke `log.txt`.
+- Mutex (`log_mutex`) mencegah dua thread menulis ke file log secara bersamaan (race condition).
+- Menulis `N. Thread X` ke `log.txt`, di mana `N` adalah `log_counter` saat ini.
+
+---
+
+## 👨‍🏭 Thread 1: Menulis angka 1-100 ke `count.txt`
+
+```c
+void* thread1_func(void* arg) {
+    FILE *f = fopen("count.txt", "w");
+    if (f != NULL) {
+        for (int i = 1; i <= 100; i++) {
+            fprintf(f, "%d\n", i);
+        }
+        fclose(f);
+    }
+    log_thread("Thread 1");
+    return NULL;
+}
+```
+
+---
+
+## ✍️ Thread 2: Menulis kalimat ke `print.txt`
+
+```c
+void* thread2_func(void* arg) {
+    FILE *f = fopen("print.txt", "w");
+    if (f != NULL) {
+        fprintf(f, "Saya pintar mengerjakan thread\n");
+        fclose(f);
+    }
+    log_thread("Thread 2");
+    return NULL;
+}
+```
+
+---
+
+## 🧮 Thread 3: Menulis angka genap 2–100 ke `count_2.txt`
+
+```c
+void* thread3_func(void* arg) {
+    FILE *f = fopen("count_2.txt", "w");
+    if (f != NULL) {
+        for (int i = 2; i <= 100; i += 2) {
+            fprintf(f, "%d\n", i);
+        }
+        fclose(f);
+    }
+    log_thread("Thread 3");
+    return NULL;
+}
+```
+
+---
+
+## 🧵 Fungsi `main`: Menjalankan semua thread
+
+```c
+int main() {
+    pthread_t t1, t2, t3;
+
+    pthread_mutex_init(&log_mutex, NULL);  // Inisialisasi mutex
+
+    FILE *log_clear = fopen("log.txt", "w");  // Kosongkan log.txt sebelum mulai
+    if (log_clear != NULL) fclose(log_clear);
+
+    pthread_create(&t1, NULL, thread1_func, NULL);
+    pthread_create(&t2, NULL, thread2_func, NULL);
+    pthread_create(&t3, NULL, thread3_func, NULL);
+
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+    pthread_join(t3, NULL);
+
+    pthread_mutex_destroy(&log_mutex);  // Hapus mutex
+    return 0;
+}
+```
+
+- Tiga thread dijalankan secara paralel.
+- `pthread_join` memastikan `main()` menunggu semua thread selesai.
+- `log.txt` dikosongkan di awal (agar tidak terus menumpuk dari eksekusi sebelumnya).
+- Mutex dihancurkan setelah semua selesai.
+
+---
+
+## ⚠️ *Bug kecil*
+
+Di baris ini:
+
+```c
+FILE *log_clear = fopen("log.txt", "w")
+```
+
+Kamu lupa titik koma `;`. Seharusnya:
+
+```c
+FILE *log_clear = fopen("log.txt", "w");
+```
+
+Kalau tidak, program akan gagal dikompilasi.
+
+---
+
+## 📝 Hasil program
+
+Setelah dijalankan, kamu akan mendapat:
+
+- `count.txt` → angka 1–100
+- `count_2.txt` → angka genap 2–100
+- `print.txt` → teks `"Saya pintar mengerjakan thread"`
+- `log.txt` → urutan thread yang selesai, misalnya:
+
+  ```
+  1. Thread 2
+  2. Thread 1
+  3. Thread 3
+  ```
+
+Urutan log bisa berbeda-beda tiap kali dijalankan karena eksekusi thread tidak pasti (nondeterministic).
+
+---
 
 ### Screenshot
 https://drive.google.com/file/d/1ol_FwGVRvcOZJ_fIdrlZ-qiyUHSQjIvf/view?usp=drive_link
