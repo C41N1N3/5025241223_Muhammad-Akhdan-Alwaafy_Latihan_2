@@ -596,6 +596,77 @@ int main() {
     return 0;
 }
 ```
+
+### Tutorial
+
+### 1. Header
+
+```c
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <string.h>
+```
+
+- `stdio.h` → standar input/output
+- `sys/ipc.h` → untuk key IPC (kunci komunikasi antar proses)
+- `sys/shm.h` → fungsi shared memory (shmget, shmat, shmdt, dll)
+- `string.h` → untuk `strcpy`
+
+---
+
+### 2. Buat Shared Memory
+
+```c
+key_t key = 1234;
+int shmid = shmget(key, 1024, IPC_CREAT | 0666);
+```
+
+- `key = 1234` → kunci unik shared memory.
+- `shmget()` → buat atau ambil shared memory dengan:
+  - Ukuran: `1024` byte.
+  - `IPC_CREAT` → buat kalau belum ada.
+  - `0666` → permission read & write untuk user, group, dan others.
+
+Jika berhasil, `shmid` berisi ID dari shared memory. Kalau gagal, `shmid` akan < 0.
+
+---
+
+### 3. Attach ke Shared Memory
+
+```c
+char *data = (char *)shmat(shmid, NULL, 0);
+```
+
+- `shmat()` → menghubungkan shared memory ke proses saat ini.
+- Hasilnya berupa pointer (`char *data`) yang bisa kamu pakai untuk baca/tulis.
+
+Kalau gagal, `shmat()` akan mengembalikan `(char *)(-1)`.
+
+---
+
+### 4. Menulis ke Shared Memory
+
+```c
+strcpy(data, "aku lagi belajar ipc");
+```
+
+- String `"aku lagi belajar ipc"` disalin ke alamat shared memory.
+- Proses lain yang attach ke shared memory dengan `key = 1234` bisa membaca string ini juga.
+
+---
+
+### 5. Melepas (Detach)
+
+```c
+shmdt(data);
+```
+
+- `shmdt()` → melepaskan hubungan antara shared memory dan proses ini.
+- Shared memory tetap ada di sistem sampai semua proses detach **dan** ada proses yang menghapusnya dengan `shmctl(..., IPC_RMID, ...)`.
+
+---
+
 - `receiver.c`
 ```c
 #include <stdio.h>
