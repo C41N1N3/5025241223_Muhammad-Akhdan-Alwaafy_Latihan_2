@@ -562,8 +562,6 @@ int main() {
 
 ---
 
-```
-
 ### Screenshot
 https://drive.google.com/file/d/1WIp6vwhMleeL3l25rqp648GPAMCkzRH-/view?usp=drive_link
 
