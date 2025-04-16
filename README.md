@@ -395,7 +395,7 @@ int main() {
 
 ---
 
-## 📝 Hasil program
+## Hasil program
 
 Setelah dijalankan, kamu akan mendapat:
 
@@ -951,6 +951,74 @@ int main() {
     return 0;
 }
 ```
+
+### Tutorial
+
+### 1. Header dan Pipe
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+```
+
+- `unistd.h` → untuk fungsi `pipe()`, `fork()`, `read()`, `write()`.
+- `string.h` → untuk fungsi `strlen()`.
+
+---
+
+### 2. Membuat Pipe dan Fork
+
+```c
+int fd[2];
+pipe(fd);
+pid_t pid = fork();
+```
+
+- `fd[2]` → array untuk menyimpan file descriptor pipe:
+  - `fd[0]` → untuk membaca
+  - `fd[1]` → untuk menulis
+- `pipe(fd)` → membuat pipe.
+- `fork()` → membuat proses anak. Return value:
+  - > 0 → proses induk
+  - = 0 → proses anak
+
+---
+
+### 3. Proses Induk
+
+```c
+if (pid > 0) {
+    close(fd[0]);  // tutup sisi baca (karena induk cuma nulis)
+    char pesan[] = "hai, anak sisop 24";
+    write(fd[1], pesan, strlen(pesan) + 1);
+    close(fd[1]);  // tutup sisi tulis setelah selesai
+}
+```
+
+- `close(fd[0])` → tutup sisi baca (tidak dipakai oleh induk).
+- Kirim pesan `"hai, anak sisop 24"` ke proses anak.
+- `strlen(pesan) + 1` → +1 karena kita ingin mengikutsertakan karakter null (`\0`) di akhir string.
+
+---
+
+### 4. Proses Anak
+
+```c
+else if (pid == 0) {
+    close(fd[1]);  // tutup sisi tulis (anak cuma baca)
+    char buffer[100];
+    read(fd[0], buffer, sizeof(buffer));
+    printf("%s\n", buffer);
+    close(fd[0]);
+}
+```
+
+- `close(fd[1])` → tutup sisi tulis karena anak hanya membaca.
+- `read()` → membaca dari pipe ke buffer.
+- `printf()` → mencetak isi buffer ke layar.
+
+---
 
 #### Output
 ```
