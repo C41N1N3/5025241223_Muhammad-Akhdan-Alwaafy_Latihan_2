@@ -273,7 +273,7 @@ int main() {
 
 ---
 
-## 🔧 Header & Variabel Global
+## Header & Variabel Global
 
 ```c
 #include <stdio.h>
@@ -291,7 +291,7 @@ int log_counter = 0;
 
 ---
 
-## 📄 Fungsi `log_thread`
+## Fungsi `log_thread`
 
 ```c
 void log_thread(const char* thread_name) {
@@ -312,7 +312,7 @@ void log_thread(const char* thread_name) {
 
 ---
 
-## 👨‍🏭 Thread 1: Menulis angka 1-100 ke `count.txt`
+## Thread 1: Menulis angka 1-100 ke `count.txt`
 
 ```c
 void* thread1_func(void* arg) {
@@ -330,7 +330,7 @@ void* thread1_func(void* arg) {
 
 ---
 
-## ✍️ Thread 2: Menulis kalimat ke `print.txt`
+## Thread 2: Menulis kalimat ke `print.txt`
 
 ```c
 void* thread2_func(void* arg) {
@@ -346,7 +346,7 @@ void* thread2_func(void* arg) {
 
 ---
 
-## 🧮 Thread 3: Menulis angka genap 2–100 ke `count_2.txt`
+## Thread 3: Menulis angka genap 2–100 ke `count_2.txt`
 
 ```c
 void* thread3_func(void* arg) {
@@ -364,7 +364,7 @@ void* thread3_func(void* arg) {
 
 ---
 
-## 🧵 Fungsi `main`: Menjalankan semua thread
+## Fungsi `main`: Menjalankan semua thread
 
 ```c
 int main() {
@@ -472,13 +472,96 @@ int main() {
 }
 ```
 
-### Contoh Isi `log.txt`
+### Tutorial
+
+### 1. Header & Global
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define THREAD_COUNT 5
+
+pthread_mutex_t lock;
 ```
-thread 1 count 1
-thread 1 count 2
-thread 1 count 3
-thread 2 count 1
-...
+
+- `pthread.h`: untuk multithreading
+- `unistd.h`: untuk `sleep()`
+- `lock`: mutex global untuk mengontrol akses ke `log.txt`
+- `THREAD_COUNT`: konstanta untuk jumlah thread (5 thread)
+
+---
+
+### 2. Fungsi Thread
+
+```c
+void* count_and_log(void* arg) {
+    int id = *(int*)arg;
+    pthread_mutex_lock(&lock);
+    for (int i = 1; i <= 3; i++) {
+        FILE *f = fopen("log.txt", "a");
+        if (f != NULL) {
+            fprintf(f, "thread %d count %d\n", id, i);
+            fclose(f);
+        }
+        sleep(1);
+    }
+    pthread_mutex_unlock(&lock);
+    free(arg);
+    return NULL;
+}
+```
+
+- `id = *(int*)arg` → ambil ID unik dari pointer argumen.
+- `pthread_mutex_lock()` → thread ini memegang kunci dulu.
+- Di dalam loop `1 sampai 3`, thread menulis ke `log.txt` dan tidur 1 detik.
+- Setelah selesai, `pthread_mutex_unlock()` agar thread lain bisa masuk.
+- `free(arg)` → karena ID di-`malloc`, wajib di-`free`.
+
+> Karena seluruh `for` loop berada **di dalam mutex**, maka setiap thread **menulis 3 baris sekaligus secara eksklusif**.
+
+---
+
+### 3. Fungsi `main`
+
+```c
+int main() {
+    pthread_t threads[THREAD_COUNT];
+    pthread_mutex_init(&lock, NULL);
+    FILE *clear = fopen("log.txt", "w");
+    if (clear != NULL) fclose(clear);
+```
+
+- Inisialisasi mutex.
+- Bersihkan isi file `log.txt` dengan membuka dalam mode tulis (`w`), lalu ditutup langsung.
+
+```c
+    for (int i = 0; i < THREAD_COUNT; i++) {
+        int* id = malloc(sizeof(int));
+        *id = i + 1;
+        pthread_create(&threads[i], NULL, count_and_log, id);
+    }
+```
+
+- Loop untuk membuat 5 thread.
+- Masing-masing `id` disiapkan pakai `malloc` supaya bisa di-passing sebagai pointer unik untuk tiap thread.
+
+```c
+    for (int i = 0; i < THREAD_COUNT; i++) {
+        pthread_join(threads[i], NULL);
+    }
+    pthread_mutex_destroy(&lock);
+    return 0;
+}
+```
+
+- Tunggu semua thread selesai.
+- Hancurkan mutex setelah semua thread selesai.
+
+---
+
 ```
 
 ### Screenshot
